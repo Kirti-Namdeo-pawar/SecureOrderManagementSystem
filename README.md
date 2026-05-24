@@ -1,320 +1,215 @@
----
+# Secure Order Management System
 
-# 🚀 **Secure Order Management System**
+![System Architecture Diagram](image1)
 
-## 🏗 Microservices Architecture using Spring Boot, JWT, Eureka & API Gateway
-
----
-
-# 📌 **Project Overview**
-
-The **Secure Order Management System** is a complete **microservices-based backend application** built using **Spring Boot**.
-
-This project demonstrates real-world implementation of:
-
-- ✅ Microservices Architecture  
-- ✅ Service Registry (Eureka)  
-- ✅ API Gateway (Spring Cloud Gateway)  
-- ✅ JWT Authentication  
-- ✅ Role-Based Authorization  
-- ✅ Inter-Service Communication (OpenFeign)  
-- ✅ Centralized Security  
-- ✅ Separate Database per Service  
+_Distributed Microservices-Based Backend Architecture using Spring Boot, JWT, Eureka, API Gateway, and OpenFeign_
 
 ---
 
-# 🧱 **System Architecture**
+## Table of Contents
 
-## 🔹 Microservices Used
-
-| Service Name        | Port  | Description |
-|--------------------|-------|-------------|
-| **Service Registry** | 8761  | Eureka Server |
-| **API Gateway**      | 9090  | Entry point for all requests |
-| **Auth Service**     | 8081  | Authentication & JWT generation |
-| **Product Service**  | 8082  | Product management |
-| **Order Service**    | 8083  | Cart & Order management |
-| **security-common**  | —     | Shared JWT utility module |
-
-Each service runs independently and registers itself with **Eureka Server**.
-
----
-
-# 🔄 **Complete System Flow**
+- [Overview](#overview)
+- [System Architecture](#system-architecture)
+- [Core Technologies](#core-technologies)
+- [Microservices Breakdown](#microservices-breakdown)
+- [Security Architecture](#security-architecture)
+- [Role-Based Authorization](#role-based-authorization)
+- [Database Architecture](#database-architecture)
+- [Inter-Service Communication](#inter-service-communication)
+- [Gateway Routing](#gateway-routing)
+- [Engineering Highlights](#engineering-highlights)
+- [Testing Approach](#testing-approach)
+- [Improvement Roadmap](#improvement-roadmap)
+- [Conclusion](#conclusion)
 
 ---
 
-## 1️⃣ Service Startup Order
+## Overview
 
-1. Start **Service Registry**
-2. Start **Auth Service**
-3. Start **Product Service**
-4. Start **Order Service**
-5. Start **API Gateway**
+The **Secure Order Management System** is a modular, microservices-based backend application designed to emulate an enterprise-grade distributed system. Built entirely in Java with Spring Boot and Spring Cloud, this project brings together authentication, authorization, service discovery, centralized security, and inter-service communication in an educational showcase of scalable backend engineering practices.
 
-All services register themselves with Eureka.
-
----
-
-# 🔐 **Authentication & Authorization Flow**
+**_Project Focus:_**
+- Distributed system architecture & service isolation
+- Centralized JWT-based authentication & role-based authorization
+- Modular services (Auth, Product, Order) with dedicated databases
+- Service discovery with Eureka
+- Secure, centralized API gateway
+- Feign-based inter-service HTTP communication
 
 ---
 
-## 📝 Step 1: User Signup
+## System Architecture
 
-- User registers via **Auth Service**
-- Role assigned:
-  - `USER`
-  - `ADMIN`
-- User saved in Auth database
+The system follows a **microservices architecture** pattern, splitting responsibilities across independently deployable services. All external API traffic enters through a centralized API Gateway, which manages authentication, JWT validation, and secure routing. Each service maintains its own database, ensuring true service isolation.
 
----
+![System Architecture](image1)
+<img width="1024" height="559" alt="image" src="https://github.com/user-attachments/assets/f9e58f3b-5271-4fc7-9f12-7e442760df63" />
 
-## 🔑 Step 2: Login & JWT Generation
+**_Architecture Layers:_**
+- **Client Layer**: Client apps interact via REST APIs.
+- **API Gateway & Security Layer**: Entry point for all requests; enforces JWT authentication & role-based access.
+- **Service Layer**: Independent microservices for auth, product, and order management.
+- **Database Layer**: Database-per-service, ensuring modularity and autonomy.
 
-After login:
-
-- Credentials validated
-- JWT token generated
-- Token returned to client
-
-### JWT Contains:
-
-- Username  
-- Role  
-- Issued Date  
-- Expiration Date  
-- Claims  
+> See [Architecture Diagram](#system-architecture) for a visual overview.
 
 ---
 
-## 🌐 Step 3: Client Sends Request
+## Core Technologies
 
-All requests go through:
-
-http://localhost:9090
-
-
-Header:
-
-Authorization: Bearer <JWT_TOKEN>
-
-
----
-
-## 🚦 Step 4: API Gateway Validation
-
-The **API Gateway** contains:
-
-- Custom **JWT Authentication Filter**
-- Overridden `apply()` method
-- Runs for every request
-
-### Gateway Process:
-
-1. Extract token from:
-HTTP Header → Authorization
-
-2. Validate JWT
-3. Extract:
-- Username
-- Role
-- Expiration
-4. Apply Role-Based Rules
-5. Forward request to correct microservice
-
-If token invalid → `401 Unauthorized`
+| Category                | Technologies                                                      |
+|-------------------------|-------------------------------------------------------------------|
+| Backend Framework       | Spring Boot                                                       |
+| Security                | Spring Security, JWT (JJWT)                                       |
+| Service Discovery       | Netflix Eureka Server                                             |
+| API Gateway             | Spring Cloud Gateway                                              |
+| Inter-Service Comm      | OpenFeign                                                         |
+| Database                | MySQL                                                             |
+| ORM                     | Spring Data JPA / Hibernate                                       |
+| Build Tool              | Maven                                                             |
+| Testing                 | Postman                                                           |
+| Boilerplate Reduction   | Lombok                                                            |
 
 ---
 
-# 🛡 **Security Design**
+## Microservices Breakdown
 
-✔ API Gateway performs:
+| Service           | Responsibility                      | Port  |
+|-------------------|-------------------------------------|-------|
+| Eureka Server     | Service Registry & Discovery         | 8761  |
+| API Gateway       | Central Routing & Security           | 9090  |
+| Auth Service      | User Authentication & JWT Provider   | 8081  |
+| Product Service   | Product CRUD Management              | 8082  |
+| Order Service     | Cart & Order Management              | 8083  |
+| security-common   | Shared JWT Utility Module            | Shared|
 
-- JWT validation  
-- Role extraction  
-- Authorization control  
-
-✔ Product & Order services:
-
-- Trust API Gateway  
-- Do not re-validate JWT  
-- Contain security configuration but rely on Gateway filtering  
-
-This ensures **centralized security management**.
+- **Each service registers with Eureka** for discovery.
+- All services are independently deployable and own exclusive MySQL databases.
 
 ---
 
-# 🔁 **Inter-Service Communication**
+## Security Architecture
 
-Order Service communicates with Product Service using:
+**Centralized JWT Authentication & Authorization**
 
-### ✅ OpenFeign (Thin Client)
+- **Sign-Up**: Users register via Auth Service, assigned roles (`USER`, `ADMIN`).
+- **Login**: On successful login, JWT tokens are issued, containing username, role, issued/expiry timestamps, and claims.
+- **Token Validation**:  
+  - Centralized at the API Gateway using a **custom JWT Gateway Filter** (extends `AbstractGatewayFilterFactory`), handling:
+    1. Authorization header detection
+    2. Bearer token JWT parsing and validation
+    3. Role extraction & route authorization
+    4. Forwarding/denying the request (HTTP 401 for invalid tokens)
+- **Trust Model**: Downstream services (Product/Order) trust requests forwarded by the gateway, reducing redundant authentication logic.
 
-Flow:
-
-1. Order Service calls Product Service
-2. Retrieves product details
-3. Maps response using `ProductResponse` class
-4. Creates Order & OrderItem
-
----
-
-# 🗂 **Database Architecture**
-
-Each microservice maintains its own database:
-
-- Auth DB → Users  
-- Product DB → Products  
-- Order DB → Orders & Cart  
-
-This follows true microservices design principles.
+> **Tokens expire after ~1 hour. No refresh token flow is implemented in this version. Clients must re-authenticate post expiration.**
 
 ---
 
-# 📡 **API Summary**
+## Role-Based Authorization
+
+- **Admin APIs** (restricted to `ADMIN` role):
+  - Product addition, update, and deletion
+  - Viewing all orders
+- **User APIs**:
+  - Managing own cart and placing/viewing orders
+
+Authorization rules are centrally enforced in the API Gateway, streamlining policy updates and reducing duplication.
 
 ---
 
-## 🔐 Auth Service (Port 8081)
+## Database Architecture
 
-- `POST /auth/signup`
-- `POST /auth/login`
+**_Database-per-Service_** pattern:
 
----
+| Service         | Database Responsibility          |
+|-----------------|----------------------------------|
+| Auth Service    | User authentication data         |
+| Product Service | Product inventory                |
+| Order Service   | Order and cart data              |
 
-## 📦 Product Service (Port 8082)
-
-- `POST /products/add`
-- `GET /products/{id}`
-- `GET /products/all`
-- `PUT /products/update`
-- `DELETE /products/delete/{id}`
-
-(Admin Protected)
+- No cross-service direct DB access ensures true service independence.
+- Enables modularity, scalability, and easier maintenance.
 
 ---
 
-## 🛒 Order Service (Port 8083)
+## Inter-Service Communication
 
-### 👤 User APIs
-
-- `POST /orders/cart/add`
-- `PUT /orders/cart/update`
-- `DELETE /orders/cart/remove`
-- `POST /orders/place`
-- `GET /orders/my`
-
-### 👑 Admin APIs
-
-- `GET /orders/all`
-- `PUT /orders/update-status`
+- **Order Service ↔ Product Service**: Uses OpenFeign for clean HTTP-based service calls.
+- **Data Handling**: DTOs standardize communication (product ID, name, category, quantity, price).
+- **Typical Flow**: 
+  1. User requests order
+  2. Order Service fetches/validates product data via Feign client
+  3. Order and order items are created accordingly
 
 ---
 
-# ⚙ **application.properties Skeleton**
+## Gateway Routing
+
+- **Spring Cloud Gateway** manages routes & endpoint exposure.
+- All routes and secured endpoints are configured in `application.properties`.
+- Combines path-based routing with JWT/role validation for each protected endpoint.
 
 ---
 
-## 🔐 Auth Service
+## Engineering Highlights
 
-```properties
-server.port=8081
-spring.application.name=AUTH-SERVICE
+**_Why Microservices & JWT?_**
+- Practice real-world scale-out architectures
+- Stateless, sessionless JWTs scale easily (no server-side session store)
+- Centralized gateway-based security for maintainability
+- API Gateway reduces code repetition and security drift
 
-spring.datasource.url=jdbc:mysql://localhost:3306/auth_db
-spring.datasource.username=YOUR_USERNAME
-spring.datasource.password=YOUR_PASSWORD
+**_Reliability & Maintainability_**
+- Service failures are isolated by design
+- Eureka for service registration/discovery resilience
+- DTO separation, layered architecture, shared JWT utilities, and global exception handling improve codebase maintainability
 
-jwt.secret=YOUR_SECRET_KEY
-jwt.expiration=3600000
+**_Performance Notes_**
+- Gateway JWT validation adds negligible latency (<10ms)
+- Internal service requests average 20–80ms locally (varies with DB calls)
 
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka
-🌐 API Gateway
-server.port=9090
-spring.application.name=API-GATEWAY
-
-eureka.client.service-url.defaultZone=http://localhost:8761/eureka
-
-spring.cloud.gateway.routes[0].id=auth-service
-spring.cloud.gateway.routes[0].uri=lb://AUTH-SERVICE
-spring.cloud.gateway.routes[0].predicates[0]=Path=/auth/**
-
-
+**_Scalability_**
+- Stateless components, database-per-service, and independent deployability make this architecture highly scalable
+- Lacks distributed caching, container orchestration, Kubernetes, or message queues in the current stage
 
 ---
 
+## Testing Approach
 
+- Tested API endpoints and JWT flows using **Postman**
+- Scenarios:
+  - Auth & signup flows
+  - Role-based endpoint access
+  - Gateway JWT/error handling
+  - CRUD on products and orders
+  - Inter-service Feign client integration
 
+---
 
+## Improvement Roadmap
 
+| Enhancement           | Purpose                        |
+|-----------------------|--------------------------------|
+| Dockerization         | Portable container deployment  |
+| Kubernetes            | Orchestration, autoscaling     |
+| Config Server         | Central configuration           |
+| Refresh Tokens        | Enhanced authentication         |
+| Resilience4j          | Circuit breaking, retries       |
+| Distributed Tracing   | Improved observability          |
+| Rate Limiting         | Prevent API abuse at gateway    |
+| Security (HTTPS)      | Secure all network traffic      |
+| Monitoring (ELK/SLEUTH)| Auditability, error tracking   |
 
-##🧠 **Key Concepts Learned**
+---
 
+## Conclusion
 
+This project offers a robust educational blueprint for microservices-based backend system design—uniting modularity, centralized security, and scalable engineering patterns. While not production-hardened, it establishes a strong foundation across distributed architecture, JWT authentication/authorization, service discovery, and clean code modularity.
 
+---
+**_For architecture, code samples, or improvements, see the [diagram above](#system-architecture)._**
 
-Microservices Architecture
+---
 
-Service Discovery (Eureka)
-
-API Gateway Routing
-
-JWT Authentication
-
-Role-Based Authorization
-
-Custom Gateway Filters
-
-OpenFeign Communication
-
-Centralized Security
-
-Stateless Authentication
-
-⚠ Challenges Faced
-JWT validation flow
-
-Role-based routing logic
-
-Inter-service communication issues
-
-Correct service startup sequence
-
-Managing multiple ports
-
-Eureka configuration
-
-🚀 How To Run
-Clone repository
-
-Configure application.properties in each service
-
-Start MySQL databases
-
-Start services in order:
-
-Service Registry
-
-Auth Service
-
-Product Service
-
-Order Service
-
-API Gateway
-
-Test using Postman via Gateway port (9090)
-
-🏁 Conclusion
-This project demonstrates a fully functional, secure microservices architecture implementing:
-
-Authentication
-
-Authorization
-
-API Gateway Security
-
-Service Discovery
-
-Inter-Service Communication
+**Author:** [Kirti Namdeo Pawar](https://github.com/Kirti-Namdeo-pawar)
