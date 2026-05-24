@@ -1,6 +1,6 @@
 # Secure Order Management System
 
-![System Architecture Diagram](image1)
+
 
 _Distributed Microservices-Based Backend Architecture using Spring Boot, JWT, Eureka, API Gateway, and OpenFeign_
 
